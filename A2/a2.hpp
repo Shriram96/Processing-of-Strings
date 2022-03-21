@@ -81,6 +81,7 @@ void create_suffix_tree(std::string &text)
     {
         // std::cout << std::endl << "Started suffix: " << i << std::endl;
         suffix_node* current_node = root;
+        int previous_length = root->node_length;
 
         std::cout << std::endl << "STARTED Adding: " << text.substr(i, text_len - i) << " to the Trie" << std::endl;
         for(int j = i; j < text_len; j++)
@@ -93,17 +94,25 @@ void create_suffix_tree(std::string &text)
                         << "length: "  << current_node->node_length << "\t"
                         << "String: " << text.substr(current_node->start_index, node_length) << " vs " << text.substr(j, text_len - j) << std::endl;
 
-            if(((j - i) <= node_length) && (node_length > 1))
+            std::cout << "Previous Length: " << previous_length << std::endl;
+            int collateral = 0;
+            if(previous_length == 1)
             {
-                if(text[j] == text[j - i + current_node->start_index])
+                collateral = 1;
+            }
+            previous_length = current_node->node_length;
+
+            if(((j - i) < node_length + collateral) && (node_length > 1))
+            {
+                if(text[j] == text[j - i + current_node->start_index + collateral])
                 {
                     std::cout << "\t\tEqualling at j: " << j << "\tWith letter: " << text[j] << std::endl;
                     continue;
                 }
                 else
                 {
-                    long long int split_start  = j - i + current_node->start_index;
-                    long long int split_length = current_node->node_length - j + i;
+                    long long int split_start  = j - i + current_node->start_index + collateral;
+                    long long int split_length = current_node->node_length - j + i + collateral;
 
                     std::cout << "\t\tNOT equalling at j: " << j << "\tWith letter: " << text[j] << " != " << text[split_start] << std::endl;
 
@@ -125,6 +134,8 @@ void create_suffix_tree(std::string &text)
                     std::cout << "\t\t\tAdding Outgoing Edge. Outgoing Edges = " << outgoing_edges << std::endl;
 
                     current_node->node_length -= split_length;
+
+                    std::cout << "->" << text.substr(split_start, split_length) << std::endl;
                 }
             }
             else
@@ -135,6 +146,7 @@ void create_suffix_tree(std::string &text)
             if(current_node->next_list[HASH(text[j])] == NULL)
             {
                 std::cout << "\t\tCreating new node at j: " << j << "\tWith letter: " << text[j] << "\tSubstring: " << text.substr(j, text_len - j) << std::endl;
+                std::cout << "->" << text.substr(j, text_len - j) << std::endl;
 
                 if(current_node->next_list_length == 0)
                 {
