@@ -6,26 +6,22 @@
 #ifndef A2_HPP
 #define A2_HPP
 
-#define SIGMA_LENGTH 6
-// #define INITIAL_INDEX 32
-// #define FINAL_INDEX 126
-// #define ASCII_RANGE FINAL_INDEX - INITIAL_INDEX + 1
-// #define HASH(character) character - INITIAL_INDEX
+// Took few inspirations from Professor Ben Langmead's (Johns Hopkins University) lecture on Suffix Trees
 
 struct suffix_node
 {
-    std::string node_string = "";
 
     short int next_list_length = 0;
 
-    long long int node_string_length = 0;
-
     std::vector<suffix_node *> next_list = {NULL, NULL, NULL, NULL, NULL, NULL};
 
-    suffix_node(const std::string string = "")
+    long long int start_index = 0;
+    long long int node_length = 0;
+
+    suffix_node(const long long int start = 0, const long long int length = 0)
     {
-        node_string = string;
-        node_string_length = node_string.length();
+        start_index = start;
+        node_length = length;
     }
 
 };
@@ -50,12 +46,11 @@ void create_suffix_tree(std::string &text)
 {
     
     long long int text_len = text.find("$") + 1;
-    text = text.substr(0, text_len);
 
     // std::cout << "Text Length: " << text_len << std::endl;
 
-    suffix_node* root = new suffix_node("");
-    root->next_list[HASH(text[0])] = new suffix_node(text);
+    suffix_node* root = new suffix_node(0, 0);
+    root->next_list[HASH(text[0])] = new suffix_node(0, text_len);
     root->next_list_length += 1;
 
     long long int internal_nodes = 1;
@@ -73,12 +68,14 @@ void create_suffix_tree(std::string &text)
             if(current_node->next_list[HASH(text[j])] != NULL)
             {
                 suffix_node* child_node = current_node->next_list[HASH(text[j])];
-                std::string node_string = child_node->node_string;
-                long long int node_string_length = child_node->node_string_length;
+
+                long long int start_index = child_node->start_index;
+
+                long long int node_string_length = child_node->node_length;
 
                 long long int k = j + 1;
 
-                while(k - j < node_string_length && text[k] == node_string[k-j])
+                while(k - j < node_string_length && text[k] == text[k - j + start_index])
                 {
                     k += 1;
                 }
@@ -90,18 +87,22 @@ void create_suffix_tree(std::string &text)
                 }
                 else
                 {
-                    suffix_node* split_node = new suffix_node(node_string.substr(0, k - j));
-                    split_node->next_list[HASH(text[k])] = new suffix_node(text.substr(k, text_len - k));
-                    split_node->next_list[HASH(node_string[k - j])] = child_node;
-                    split_node->next_list_length += 2;
+                    suffix_node* split_node = new suffix_node(start_index, k - j);
 
-                    child_node->node_string = node_string.substr(k - j);
-                    child_node->node_string_length = child_node->node_string.length();
+                    split_node->next_list[HASH(text[k])] = new suffix_node(k, text_len - k);
+
+                    split_node->next_list[HASH(text[k - j + start_index])] = child_node;
+                    split_node->next_list_length += 2;
+                    outgoing_edges += 1;
+
+                    child_node->start_index = k - j + start_index;
+
+                    child_node->node_length = node_string_length - (k - j);
+
                     current_node->next_list[HASH(text[j])] = split_node;
                     split_node->next_list_length += 1;
-
                     internal_nodes += 1;
-                    outgoing_edges += 2;
+                    outgoing_edges += 1;
                 }
             }
             else
@@ -110,7 +111,7 @@ void create_suffix_tree(std::string &text)
                 {
                     internal_nodes += 1;
                 }
-                current_node->next_list[HASH(text[j])] = new suffix_node(text.substr(j));
+                current_node->next_list[HASH(text[j])] = new suffix_node(j, text_len - j);
                 current_node->next_list_length += 1;
                 outgoing_edges += 1;
             }
