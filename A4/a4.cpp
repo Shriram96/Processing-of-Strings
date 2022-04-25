@@ -39,30 +39,30 @@ int main(int argc, char* argv[]) {
     if ((getline(&line, &len, fp)) != -1) 
     {
         bwt_string = line;
-        bwt_string.erase(std::remove(bwt_string.begin(), bwt_string.end(), '\n'), bwt_string.end());
+        bwt_string.pop_back();
     }
 
     // Get Column F of LF-mapping
     std::vector<int> f_column(SIGMA_LEN);
     for (int i = 0; i < SIGMA_LEN; i++)
     {
-        fscanf(fp, "%d", &f_column[i]);
+        int result = fscanf(fp, "%d", &f_column[i]);
     }
 
     // Get Spacing factor used to compact OCC Matrix
     int spacing_factor;
-    fscanf(fp, "%d", &spacing_factor);
+    int result = fscanf(fp, "%d", &spacing_factor);
 
     // Get compacted OCC Matrix
     size_t bwt_string_length = bwt_string.length();
     int occ_column_size = (bwt_string_length / spacing_factor) + ((bwt_string_length % spacing_factor != 0) ? 1 : 0);
 
-    std::vector<std::vector<int>> occ_matrix(SIGMA_LEN, std::vector<int> (occ_column_size)); // Need to confirm how the size is derived
+    std::vector<std::vector<int>> occ_matrix(SIGMA_LEN, std::vector<int> (occ_column_size));
     for (int i = 0; i < SIGMA_LEN; i++)
     {
         for(int j = 0; j < occ_column_size; j++)
         {
-            fscanf(fp, "%d", &occ_matrix[i][j]);
+            int result = fscanf(fp, "%d", &occ_matrix[i][j]);
         }
     }
 

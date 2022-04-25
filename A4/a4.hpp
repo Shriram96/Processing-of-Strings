@@ -8,6 +8,8 @@
 
 #define SIGMA_LEN 6
 
+// Took few inspirations from Professor Ben Langmead's (Johns Hopkins University) lecture on BWT and FM-Index
+
 short int HASH(const char &letter)
 {
     switch(letter)
@@ -47,49 +49,32 @@ void fm_index(std::string &bwt_string, std::vector<int> &f_column, int &spacing_
 {
     long long int bwt_length = bwt_string.length();
     long long int pattern_length = pattern.length();
-    // std::cout << "BWT String: " << bwt_string << "\tLength: " << bwt_length << std::endl;
     long long int dollar_index = bwt_string.find("$");
 
     std::string text = "";
-
-    // std::cout << "OCC Matrix: " << std::endl;
-    // for(std::vector<int> a: occ_matrix)
-    // {
-    //     for(int i = 0; i < a.size(); i++)
-    //     {
-    //         std::cout << a[i] << "\t";
-    //     }
-    //     std::cout << std::endl;
-    // }
 
     long long int last_index = dollar_index;
 
     for(int i = 0; i < bwt_length; i++)
 	{
-		text += bwt_string[last_index];
-        int occ_index = get_occ_value(bwt_string, spacing_factor, occ_matrix, last_index, bwt_string[last_index]);
-		last_index = f_column[HASH(bwt_string[last_index])] + occ_index - 1;
+		text = bwt_string[last_index] + text;
+        int occ_value = get_occ_value(bwt_string, spacing_factor, occ_matrix, last_index, bwt_string[last_index]);
+		last_index = f_column[HASH(bwt_string[last_index])] + occ_value - 1;
 	}
 
-    reverse(text.begin(), text.end());
     std::cout << text << std::endl;
 
+    size_t start = 0;
+    size_t end = bwt_length - 1;
     for(int i = pattern_length - 1; i >= 0; i--)
     {
-        const char* P = &pattern[i];
-
-        size_t a = 0;
-        size_t b = bwt_length - 1;
-    
-        for(int j = pattern_length - i - 1; j >= 0 && a <= b; j--)
-        {            
-            int a_occ_index = get_occ_value(bwt_string, spacing_factor, occ_matrix, a - 1, P[j]);
-            int b_occ_index = get_occ_value(bwt_string, spacing_factor, occ_matrix, b, P[j]);
-            a = f_column[HASH(P[j])] + (a ? a_occ_index : 0);
-            b = f_column[HASH(P[j])] + b_occ_index - 1;
-        }
-    
-        std::cout << ((a <= b) ? (b - a + 1) : 0) << std::endl;
+        int start_occ_value = get_occ_value(bwt_string, spacing_factor, occ_matrix, start - 1, pattern[i]);
+        int end_occ_value = get_occ_value(bwt_string, spacing_factor, occ_matrix, end, pattern[i]);
+        start = f_column[HASH(pattern[i])] + (start ? start_occ_value : 0);
+        // std::cout << "Start: " << f_column[HASH(pattern[i])] << " + " << (start ? start_occ_value : 0) << " = " << start << std::endl;
+        end = f_column[HASH(pattern[i])] + end_occ_value - 1;
+        // std::cout << "End: " << f_column[HASH(pattern[i])] << " + " << end_occ_value - 1 << " = " << end << std::endl;
+        std::cout << ((start <= end) ? (end - start + 1) : 0) << std::endl;
     }
     
 }// fm_index
